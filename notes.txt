@@ -1,0 +1,4 @@
+https://itp.nyu.edu/archive/physcomp-spring2014/sensors/Reports/GasSensors.html
+
+TGS 2602 Data Sheet - Toluene (C7H8), Hydrogen Sulfide (H2S), Ethanol (C2H6O), Ammonia (NH3), Hydrogen (H)
+TGS 2620 Data Sheet - Ethanol (C2H6O), Hydrogen (H), Iso-butane (CH3CH(CH3)2), Carbon Monoxide (CO), Methane (CH4)
