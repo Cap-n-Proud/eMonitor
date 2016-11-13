@@ -7,4 +7,4 @@ Measueremnt
 - Gas contaminant (Ethil, solvent,  Organic vapor detectors/alarms) TGS2620
 - Barometic pressure (BMP280)
 - Dust ()
-- Light(photoresistor)
+- Light (photoresistor)
