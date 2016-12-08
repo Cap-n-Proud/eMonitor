@@ -8,7 +8,6 @@ var eventEmitter = new events.EventEmitter();
 var nodeLib = nconf.get('server:nodeLib');
 var logfilePath = nconf.get('server:logfilePath');
 
-var telemetryfilePath = nconf.get('telemetry:telemetryfilePath');
 var bunyan = require('bunyan');
 
 //--------------- Logging middleware ---------------
@@ -35,13 +34,16 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var sys = require('sys');
 
-var serverPort = nconf.get('server:serverPort');
+var interfacePort = nconf.get('server:interfacePort');
+var listeningPort = nconf.get('server:listeningPort');
+var trasmittingPort = nconf.get('server:trasmittingPort');
 var version = nconf.get('server:version');
 
 
+
 // include custom functions ======================================================================
-var systemModules = require(installPath + 'server/app/lib/systemModules');
-var functions = require(installPath + 'server/app/lib/functions');
+//var systemModules = require(installPath + 'server/app/lib/systemModules');
+//var functions = require(installPath + 'server/app/lib/functions');
 
 // load the routes
 require('./routes')(app);
@@ -93,26 +95,22 @@ Object.keys(ifaces).forEach(function (ifname) {
 
 //---------------
 
-var PORT = 10002;
 var HOST = '192.168.1.216';
-
 var dgram = require('dgram');
-var message = new Buffer('My KungFu is Good!');
-
-var client = dgram.createSocket('udp4');
-
-
-
-client.send(message, 0, message.length, PORT, HOST, function(err, bytes) {
-  if (err) throw err;
-  console.log('UDP message sent to ' + HOST +':'+ PORT);
-//  client.close();
-
-      console.log(client.address());
-client.close();
-});
 
 const server = dgram.createSocket('udp4');
+
+
+
+server.bind({
+  address: '192.168.1.153',
+  port: listeningPort
+});
+
+server.on('listening', () => {
+  var address = server.address();
+  console.log(`server listening ${address.address}:${address.port}`);
+});
 
 server.on('error', (err) => {
   console.log(`server error:\n${err.stack}`);
@@ -121,20 +119,28 @@ server.on('error', (err) => {
 
 server.on('message', (msg, rinfo) => {
   console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-});
-
-server.on('listening', () => {
-  var address = server.address();
-  console.log(`server listening ${address.address}:${address.port}`);
-});
-
-server.bind(10002);
 
 
 
+          });
+
+setInterval(function() {
+    sendCMD("readSensors", HOST, trasmittingPort);
+}, 2000);
 
 
+function sendCMD(CMD, HOST, PORT) {
+    var client = dgram.createSocket('udp4');
+    client.bind(10002);
 
+    client.send(CMD, 0, CMD.length, PORT, HOST, function(err, bytes) {
+      if (err) throw err;
+      console.log('UDP message ' + CMD +' sent to ' + HOST +':'+ PORT);
+      client.close();
+    });
+
+
+    }
 
 
 
