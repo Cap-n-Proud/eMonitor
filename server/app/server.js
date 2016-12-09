@@ -37,6 +37,7 @@ var sys = require('sys');
 var interfacePort = nconf.get('server:interfacePort');
 var listeningPort = nconf.get('server:listeningPort');
 var trasmittingPort = nconf.get('server:trasmittingPort');
+var serverPort = nconf.get('server:serverPort');
 var version = nconf.get('server:version');
 
 
@@ -46,7 +47,7 @@ var version = nconf.get('server:version');
 //var functions = require(installPath + 'server/app/lib/functions');
 
 // load the routes
-require('./routes')(app);
+require('./routes.js')(app);
 
 app.use(express.static(installPath + 'server/wwwroot'));
 
@@ -119,33 +120,137 @@ server.on('error', (err) => {
 
 server.on('message', (msg, rinfo) => {
   console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-
-
+  //socket.emit('serialData', msg.toString());
+eventEmitter.emit('sensorData', msg.toString());
 
           });
 
-setInterval(function() {
-    sendCMD("readSensors", HOST, trasmittingPort);
-}, 2000);
+io.on('connection', function(socket){
+  //socket.emit('connected', version, Telemetry);
+
+    var myDate = new Date();
+
+   var startMessage = 'Connected ' + myDate.getHours() + ':' + myDate.getMinutes() + ':' + myDate.getSeconds()+ ' v' + version + ' @' + serverADDR;
+     socket.emit('connected', startMessage, serverADDR, serverPort);
+    console.log('New socket.io connection - id: %s', socket.id);
+
+    eventEmitter.on('sensorData', function(msg){
+    socket.emit('serialData', msg);
 
 
-function sendCMD(CMD, HOST, PORT) {
-    var client = dgram.createSocket('udp4');
-    client.bind(10002);
+                  if (msg.indexOf('TEMPERATURE') !== -1)
+                  {
+                    var tokenData = msg.toString().split(SEPARATOR);
+                    var j = 0;
+                      //console.log(tokenData[1]);
+                    socket.emit('TEMPERATURE', tokenData[1]);
 
-    client.send(CMD, 0, CMD.length, PORT, HOST, function(err, bytes) {
-      if (err) throw err;
-      console.log('UDP message ' + CMD +' sent to ' + HOST +':'+ PORT);
-      client.close();
+                  }
+                  if (msg.indexOf('SOUND') !== -1)
+                  {
+                    var tokenData = msg.toString().split(SEPARATOR);
+                    var j = 0;
+                      //console.log(tokenData[1]);
+                    socket.emit('SOUND', tokenData[1]);
+
+                  }
+                  if (msg.indexOf('GAS') !== -1)
+                  {
+                    var tokenData = msg.toString().split(SEPARATOR);
+                    var j = 0;
+                      //console.log(tokenData[1]);
+                    socket.emit('GAS', tokenData[1]);
+
+                  }
+                  if (msg.indexOf('LIGHT') !== -1)
+                  {
+                    var tokenData = msg.toString().split(SEPARATOR);
+                    var j = 0;
+                      //console.log(tokenData[1]);
+                    socket.emit('LIGHT', tokenData[1]);
+
+                  }
+                  if (msg.indexOf('HUMIDITY') !== -1)
+                  {
+                    var tokenData = msg.toString().split(SEPARATOR);
+                    var j = 0;
+                      //console.log(tokenData[1]);
+                    socket.emit('HUMIDITY', tokenData[1]);
+
+                  }
+
+  });
+
+    setInterval(function() {
+        sendCMD("readSensors", HOST, trasmittingPort);
+    }, 2000);
+
+
+    function sendCMD(CMD, HOST, PORT) {
+        var client = dgram.createSocket('udp4');
+        client.bind(10002);
+
+        client.send(CMD, 0, CMD.length, PORT, HOST, function(err, bytes) {
+          if (err) throw err;
+          console.log('UDP message ' + CMD +' sent to ' + HOST +':'+ PORT);
+          client.close();
+        });
+
+
+        }
+
+
+  socket.on('REBOOT', function(){
+    function puts(error, stdout, stderr) { sys.puts(stdout) }
+    log.info('Server rebootiing now');
+    exec('sudo reboot now');
+    sockets.emit('Info', "Rebooting")
+
+  });
+
+  socket.on('SHUTDOWN', function(){
+    socket.emit('Info', "Bailey going down for maintenance now!");
+    log.info('Bailey going down for maintenance now!');
+    function puts(error, stdout, stderr) { sys.puts(stdout) }
+    exec('sudo shutdown now');
+
+  });
+
+  socket.on('disconnect', function(){
+    console.log('Disconnected id: %s', socket.id);
+    log.info('Client disconnected ' + socket.id);
+  });
+
+  socket.on('connected', function(){
+    //console.log('CONNECTED id: %s', socket.id);
+   // log.info('Client disconnected ' + socket.id);sudo modprobe bcm2835-v4l2
+  });
+
+
+    eventEmitter.on('CMDecho', function(data){
+        socket.emit('CMD', data);
+
+  });
+
+    eventEmitter.on('serialData', function(data){
+        socket.emit('serialData', data);
+
+  });
+
+});
+
+io.on('disconnect', function () {
+        console.log('A socket with sessionID ' + hs.sessionID
+            + ' disconnected!');
+    log.info('A socket with sessionID ' + hs.sessionID
+            + ' disconnected!');
     });
 
+http.listen(serverPort, function(){
+console.log('listening on *: ' + serverADDR + ':' + serverPort);
 
-    }
+    });
 
-
-
-  
-//---------------
 
 
 module.exports.nconf = nconf;

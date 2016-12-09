@@ -5,11 +5,12 @@
     "version": "1",
     "nodeLib": "",
     "SNFolder": "/home/odroid/Documents/SN/",
-    "installPath": "/home/odroid/bot/",
+    "installPath": "/home/odroid/eMonitor/",
     "logfilePath": "/home/odroid/Documents/log/",
     "empty":"N/A",
     "listeningPort":"10000",
     "trasmittingPort":"10002",
+    "serverPort":"54321",
     "empty":"N/A"
   },
   "telemetry": {
