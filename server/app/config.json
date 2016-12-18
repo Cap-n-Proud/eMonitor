@@ -13,6 +13,9 @@
     "serverPort":"54321",
     "empty":"N/A"
   },
+   "sampling": {
+     "readSensors": "2000"
+    },
   "telemetry": {
     "telemetryfilePath": "/home/odroid/Documents/telemetry/",
     "SEPARATOR": ","    

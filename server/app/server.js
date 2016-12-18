@@ -40,6 +40,7 @@ var trasmittingPort = nconf.get('server:trasmittingPort');
 var serverPort = nconf.get('server:serverPort');
 var version = nconf.get('server:version');
 
+var readSensors = nconf.get('sampling:readSensors');
 
 
 // include custom functions ======================================================================
@@ -119,7 +120,7 @@ server.on('error', (err) => {
 });
 
 server.on('message', (msg, rinfo) => {
-  console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+  //console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
   //socket.emit('serialData', msg.toString());
 eventEmitter.emit('sensorData', msg.toString());
 
@@ -183,7 +184,7 @@ io.on('connection', function(socket){
 
     setInterval(function() {
         sendCMD("readSensors", HOST, trasmittingPort);
-    }, 2000);
+    }, readSensors);
 
 
     function sendCMD(CMD, HOST, PORT) {
@@ -192,7 +193,7 @@ io.on('connection', function(socket){
 
         client.send(CMD, 0, CMD.length, PORT, HOST, function(err, bytes) {
           if (err) throw err;
-          console.log('UDP message ' + CMD +' sent to ' + HOST +':'+ PORT);
+          //console.log('UDP message ' + CMD +' sent to ' + HOST +':'+ PORT);
           client.close();
         });
 
