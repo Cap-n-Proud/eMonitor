@@ -14,7 +14,7 @@
     "empty":"N/A"
   },
    "sampling": {
-     "readSensors": "2000"
+     "readSensors": "60000"
     },
   "telemetry": {
     "telemetryfilePath": "/home/odroid/Documents/telemetry/",

@@ -11,8 +11,8 @@ var logfilePath = nconf.get('server:logfilePath');
 var bunyan = require('bunyan');
 
 //--------------- Logging middleware ---------------
-var log = bunyan.createLogger({
-  name: 'eMonitor',
+var sysLog = bunyan.createLogger({
+  name: 'sysLog',
   streams: [
     /*{
       level: 'debug',
@@ -20,7 +20,21 @@ var log = bunyan.createLogger({
     },*/
     //Log should be outside app folders
     {
-      path: logfilePath + 'eMonitor.log'  // log ERROR and above to a file
+      path: logfilePath + 'eMonitorSys.log'  // log ERROR and above to a file
+    }
+  ]
+});
+
+var sensorsLog = bunyan.createLogger({
+  name: 'sensorsLog',
+  streams: [
+    /*{
+      level: 'debug',
+      stream: process.stdout            // log INFO and above to stdout
+    },*/
+    //Log should be outside app folders
+    {
+      path: logfilePath + 'eMonitorSensors.log'  // log ERROR and above to a file
     }
   ]
 });
@@ -120,9 +134,17 @@ server.on('error', (err) => {
 });
 
 server.on('message', (msg, rinfo) => {
-  //console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+              var myDate = new Date();
+
+             var timeStamp = myDate.getHours() + ':' + myDate.getMinutes() + ':' + myDate.getSeconds();
+
+              //console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
   //socket.emit('serialData', msg.toString());
-eventEmitter.emit('sensorData', msg.toString());
+    eventEmitter.emit('sensorData', msg.toString());
+      eventEmitter.emit('status', timeStamp.toString());
+              var tokenData = msg.toString().split(SEPARATOR);
+
+    sensorsLog.info({reading: tokenData[0]}, tokenData[1]);
 
           });
 
@@ -135,6 +157,8 @@ io.on('connection', function(socket){
      socket.emit('connected', startMessage, serverADDR, serverPort);
     console.log('New socket.io connection - id: %s', socket.id);
 
+
+
     eventEmitter.on('sensorData', function(msg){
     socket.emit('serialData', msg);
 
@@ -145,23 +169,19 @@ io.on('connection', function(socket){
                     var j = 0;
                       //console.log(tokenData[1]);
                     socket.emit('TEMPERATURE', tokenData[1]);
-
                   }
                   if (msg.indexOf('SOUND') !== -1)
                   {
                     var tokenData = msg.toString().split(SEPARATOR);
                     var j = 0;
-                      //console.log(tokenData[1]);
                     socket.emit('SOUND', tokenData[1]);
-
                   }
                   if (msg.indexOf('GAS') !== -1)
                   {
                     var tokenData = msg.toString().split(SEPARATOR);
                     var j = 0;
                       //console.log(tokenData[1]);
-                    socket.emit('GAS', tokenData[1]);
-
+                    socket.emit('GAS', tokenData[1]);                      
                   }
                   if (msg.indexOf('LIGHT') !== -1)
                   {
@@ -169,7 +189,6 @@ io.on('connection', function(socket){
                     var j = 0;
                       //console.log(tokenData[1]);
                     socket.emit('LIGHT', tokenData[1]);
-
                   }
                   if (msg.indexOf('HUMIDITY') !== -1)
                   {
@@ -177,11 +196,16 @@ io.on('connection', function(socket){
                     var j = 0;
                       //console.log(tokenData[1]);
                     socket.emit('HUMIDITY', tokenData[1]);
-
                   }
 
   });
 
+
+    eventEmitter.on('status', function(msg){
+    socket.emit('status', msg);
+
+
+     });
     setInterval(function() {
         sendCMD("readSensors", HOST, trasmittingPort);
     }, readSensors);
@@ -203,7 +227,7 @@ io.on('connection', function(socket){
 
   socket.on('REBOOT', function(){
     function puts(error, stdout, stderr) { sys.puts(stdout) }
-    log.info('Server rebootiing now');
+    sysLog.info('Server rebooting now');
     exec('sudo reboot now');
     sockets.emit('Info', "Rebooting")
 
@@ -211,7 +235,7 @@ io.on('connection', function(socket){
 
   socket.on('SHUTDOWN', function(){
     socket.emit('Info', "Bailey going down for maintenance now!");
-    log.info('Bailey going down for maintenance now!');
+    sysLog.info('Bailey going down for maintenance now!');
     function puts(error, stdout, stderr) { sys.puts(stdout) }
     exec('sudo shutdown now');
 
@@ -219,7 +243,7 @@ io.on('connection', function(socket){
 
   socket.on('disconnect', function(){
     console.log('Disconnected id: %s', socket.id);
-    log.info('Client disconnected ' + socket.id);
+    sysLog.info('Client disconnected ' + socket.id);
   });
 
   socket.on('connected', function(){
@@ -243,7 +267,7 @@ io.on('connection', function(socket){
 io.on('disconnect', function () {
         console.log('A socket with sessionID ' + hs.sessionID
             + ' disconnected!');
-    log.info('A socket with sessionID ' + hs.sessionID
+    sysLog.info('A socket with sessionID ' + hs.sessionID
             + ' disconnected!');
     });
 
@@ -257,3 +281,4 @@ console.log('listening on *: ' + serverADDR + ':' + serverPort);
 module.exports.nconf = nconf;
     
   
+

@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>bot | Welcome</title>
+    <title>eMonitor | Welcome</title>
     <meta content="yes" name="mobile-web-app-capable">
     <link href="foundation/css/foundation.css" rel="stylesheet">
     <script src="foundation/js/vendor/modernizr.js"></script>
@@ -21,29 +21,35 @@
 
   <body>
 
+
+
+
+
 <div class="row">
   <div id="TEMPERATURE_LABEL" class="column small-4">Temperature</div>
   <div id="TEMPERATURE" class="column small-4">N/A</div>
 </div>
-<div class="row align-right">
+<div class="row">
   <div id="HUMIDITY_LABEL" class="column small-4">Humidity</div>
   <div id="HUMIDITY" class="column small-4">N/A</div>
 </div>
-<div class="row align-center">
+<div class="row">
   <div id="LIGHT_LABEL" class="column small-4">Light</div>
   <div id="LIGHT" class="column small-4">N/A</div>
 </div>
-<div class="row align-justify">
+<div class="row">
   <div id="SOUND_LABEL" class="column small-4">Sound</div>
   <div id="SOUND" class="column small-4">N/A</div>
 </div>
-<div class="row align-spaced">
+<div class="row">
   <div id="GAS_LABEL" class="column small-4">Gas</div>
   <div id="GAS" class="column small-4">N/A</div>
 </div>
 
-
-
+<div class="row">
+  <div id="infoData" class="column small-6">N/A</div>
+  <div id="command" class="column small-2">N/A</div>
+</div>
 
    <script src="foundation/js/foundation.min.js"></script>
   <script>
@@ -61,89 +67,7 @@ $(document).foundation();
     var MJPGPort = "N/A";
     
     var socket = io();
-    //Slide ranges are automatically calculated as percentage of the default config from Arduino
-    var PID_SLIDE_RANGE = 1.50; 
 
-    window.onload=function()
-    {
-    var classname = document.getElementsByClassName("PIDControlSlider");
-
-    var myFunction = function() {
-        var attribute = this.getAttribute("id");
-        socket.emit('SCMD', this.getAttribute("id")+' '+ this.value);
-        //alert(this.getAttribute("id")+' '+ this.value);
-    };
-
-    for(var i=0;i<classname.length;i++){
-        classname[i].addEventListener('change', myFunction, false);
-    }
-
-  
-    
-    }
-
-   {
-    var classname = document.getElementsByClassName("AngleControlSlider");
-
-    var myFunction = function() {
-        var attribute = this.getAttribute("id");
-        socket.emit('SCMD', this.getAttribute("id")+' '+ this.value);
-        //alert(this.getAttribute("id")+' '+ this.value);
-    };
-
-    for(var i=0;i<classname.length;i++){
-        classname[i].addEventListener('change', myFunction, false);
-    }
-    }
-    
-
-    function MotorF(element){
-
-    if (element.checked == true) {
-    socket.emit('SCMD', "Motors 1");    
-    }
-    else
-    {
-    socket.emit('SCMD', "Motors 0");
-    }
-    }
-
-    function AutoTune(element){
-
-    if (element.checked == true) {
-    socket.emit('SCMD', "AUTOTUNE 1");    
-    }
-    else
-    {
-    socket.emit('SCMD', "AUTOTUNE 0");
-    }
-    }
-
-    
-    
-		
-
-    function LogF(element){
-    if (element.checked == true) {
-    socket.emit('SerCMD', "LOG_ON");
-    }
-    else
-    {
-    socket.emit('SerCMD', "LOG_OFF");   
-    }
-    }
-
-    function ThrottleSet(val){
-    socket.emit('SCMD', 'Throttle ' + val);
-    document.getElementById("ThrottleVal").value = val;
-
-    }
-
-    function SteerSet(val){
-    socket.emit('SCMD', 'Steer ' + val);
-    document.getElementById("SteerVal").value = val;
-
-    }
 
     function prntCfg(){
     socket.emit('SCMD', "printConfig");
@@ -158,15 +82,6 @@ $(document).foundation();
      //document.getElementById("CMD").innerHTML = document.getElementById("right-label").value;
       socket.emit('SCMD', document.getElementById("SCMDCommand").value);    
     }
-
-    socket.on('Info', function(CMD){
-    document.getElementById("Info").innerHTML = CMD.replace("\n", "<br />");    
-    });
-
-    socket.on('CMD', function(CMD){
-    document.getElementById("CMD").innerHTML = CMD;    
-    });
-
 
 
 socket.on('TEMPERATURE', function(VAL){
@@ -187,10 +102,9 @@ socket.on('GAS', function(VAL){
 document.getElementById("GAS").innerHTML = VAL;
 });
 
-socket.on('status', function (y, p, r, b, dISTE) {
-        document.getElementById("BAL").innerHTML = dISTE;
-        document.getElementById("Pitch").innerHTML = p;
-        document.getElementById("Compass").innerHTML = y;
+socket.on('status', function (lastupdate) {
+
+document.getElementById("command").innerHTML = lastupdate;
     
     }); 
 
@@ -204,12 +118,12 @@ socket.on('status', function (y, p, r, b, dISTE) {
     });
 
 
-    socket.on('connected', function(info, serverADDR, sPort, MJPEGPort, PID){
+    socket.on('connected', function(startMessage, serverADDR, serverPort){
     started=0;
    
     serverADDR = serverADDR.toString();
-    //serverPort = sPort.toString();
-
+    serverPort = serverPort.toString();
+    document.getElementById("infoData").innerHTML = startMessage;
 	
     });
 
